@@ -12,7 +12,7 @@ PingSharp.exe <IP or Command> optional<Extra argument one> optional <Extra argum
 
 **Auto**: Automatically finds and scans subnets from Network Interfaces on the computer, Usage PingSharp.exe auto
 
-**Portscan**: Finds open ports on a given ip, can be ran in aggressive or passive mode (aggressive is default) to quicken or limit the amount of network traffic going out at a time, Usage PingSharp.exe portscan <IP> optional<aggressive [a]/passive [p]>
+**Portscan**: Finds open ports on a given ip, can be ran in aggressive or passive mode (aggressive is default) to quicken or limit the amount of network traffic going out at a time, Usage PingSharp.exe portscan <IP Address> optional<aggressive [a]/passive [p]>
 
 **Regular Scan**: Scans the given subnet for active IP addresses, put an x on the octal to scan (example: 192.168.1.x to scan IPs in the 192.168.1.0/24 range), Usage PingSharp.exe <IP>
 
