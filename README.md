@@ -1,13 +1,13 @@
 # PingSharp
 Simplifies the process of scanning for active IPs on the local network as well as basic port scanning
 
-#Usage
+# Usage
 dotnet run on linux
 .\PingSharp.exe on windows
 
 PingSharp.exe <IP or Command> optional<Extra argument one> optional <Extra argument two>
 
-#Commands
+# Commands
 **Help**: Displays the help menu, Usage PingSharp.exe help
 **Auto**: Automatically finds and scans subnets from Network Interfaces on the computer, Usage PingSharp.exe auto
 **Portscan**: Finds open ports on a given ip, can be ran in aggressive or passive mode (aggressive is default) to quicken or limit the amount of network traffic going out at a time, Usage PingSharp.exe portscan <IP> optional<aggressive [a]/passive [p]>
