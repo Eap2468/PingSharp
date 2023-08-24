@@ -17,5 +17,6 @@ PingSharp.exe [IP or Command] [Extra]/(optional) [Extra]/(optional)
 
 **Regular Scan**: Scans the given subnet for active IP addresses, put an x on the octal to scan (example: 192.168.1.x to scan IPs in the 192.168.1.0/24 range), Usage PingSharp.exe [IP]
 
+Project is created for .NET 7.0, some modification might be required to run earlier versions, I can convert the code to work with lower version if needed
 
 This project is **NOT FINISHED**, theres still a ton of functionality I plan on adding in the future
