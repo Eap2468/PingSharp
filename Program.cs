@@ -46,18 +46,22 @@ namespace Project
 
         public static void PingIP(string ip)
         {
-            Ping ping = new Ping();
-            PingOptions options = new PingOptions();
-            string data = "Hello World!";
-            byte[] buffer = Encoding.ASCII.GetBytes(data);
-            int timeout = 1000;
-
-            PingReply reply = ping.Send(ip, timeout, buffer, options);
-
-            if (reply.Status == IPStatus.Success)
+            try
             {
-                Console.WriteLine(ip + " is up, ms: " + reply.RoundtripTime + ", ttl: " + reply.Options.Ttl.ToString());
+                Ping ping = new Ping();
+                PingOptions options = new PingOptions();
+                string data = "Hello World!";
+                byte[] buffer = Encoding.ASCII.GetBytes(data);
+                int timeout = 1000;
+
+                PingReply reply = ping.Send(ip, timeout, buffer, options);
+
+                if (reply.Status == IPStatus.Success)
+                {
+                    Console.WriteLine(ip + " is up, ms: " + reply.RoundtripTime + ", ttl: " + reply.Options.Ttl.ToString());
+                }
             }
+            catch (Exception) { }
         }
 
         public static void AutoScan()
@@ -67,14 +71,13 @@ namespace Project
 
             foreach (NetworkInterface currentInterface in interfaces)
             {
-                if (currentInterface.Name == "lo0") { continue; }
-
                 if (!currentInterface.Supports(NetworkInterfaceComponent.IPv4)) { continue; }
                 foreach (UnicastIPAddressInformation addrInfo in currentInterface.GetIPProperties().UnicastAddresses)
                 {
                     if (addrInfo.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
                     {
                         string interfaceIp = addrInfo.Address.ToString();
+                        if(interfaceIp == "127.0.0.1") { continue; }
 
                         interfaceIp = interfaceIp.Substring(0, interfaceIp.LastIndexOf('.') + 1);
                         interfaceIp += "x";
@@ -94,27 +97,46 @@ namespace Project
             }
         }
 
-        //modes are true=aggressive, false=passive
-        public static void Portscan(string ip, bool mode)
+        //modes are 0=default, 1=passive, 2=aggressive
+        public static void Portscan(string ip, int mode)
         {
             for (int i = 0; i <= 65535; i++)
             {
-                if (mode)
+                if (mode == 2)
                 {
-                    Thread thread = new Thread((object port) => {
-                        try
+                    try
+                    {
+                        Thread thread = new Thread((object port) =>
                         {
                             try
                             {
-                                TcpClient client = new TcpClient(ip, (int)port);
-                                Console.WriteLine("Port " + port + " is open");
+                                try
+                                {
+                                    TcpClient client = new TcpClient(ip, (int)port);
+                                    Console.WriteLine("Port " + port + " is open");
+                                }
+                                catch (Exception) { }
+
                             }
                             catch (Exception) { }
-
-                        }
-                        catch (Exception) { }
-                    });
-                    thread.Start(i);
+                        });
+                        thread.Start(i);
+                    }
+                    catch (Exception)
+                    {
+                        i--;
+                        Thread.Sleep(50);
+                    }
+                }
+                else if (mode == 1)
+                {
+                    try
+                    {
+                        TcpClient client = new TcpClient(ip, i);
+                        Console.WriteLine("Port " + i + " is open");
+                    }
+                    catch (Exception) { }
+                    Thread.Sleep(50);
                 }
                 else
                 {
@@ -124,8 +146,6 @@ namespace Project
                         Console.WriteLine("Port " + i + " is open");
                     }
                     catch (Exception) { }
-                    Thread.Sleep(50);
-
                 }
             }
         }
@@ -197,20 +217,20 @@ namespace Project
                     return;
                 }
 
-                bool mode = true;
+                int mode = 0;
                 if (args.Length > 2)
                 {
                     if (args[2] == "p" || args[2] == "passive")
                     {
-                        mode = false;
+                        mode = 1;
                     }
                     else if (args[2] == "a" || args[2] == "aggressive")
                     {
-                        mode = true;
+                        mode = 2;
                     }
                     else
                     {
-                        Console.WriteLine("Please enter a valid mode (aggressive [a] or passive [p])");
+                        Console.WriteLine("Please enter a valid mode (aggressive [a], passive [p], or blank for default)");
                         return;
                     }
                 }
