@@ -1,39 +1,43 @@
-﻿using System;
+using System;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
+using System.Collections.Generic;
 
-namespace Project{
+namespace Project
+{
     public class Project
     {
         public static bool IpStringCheck(string str)
         {
             try
             {
-                if(!str.Contains('.'))
+                if (!str.Contains("."))
                 {
                     return false;
                 }
 
-                string [] numbers = str.Split('.');
-                
-                if(numbers.Length != 4)
+                string[] numbers = str.Split('.');
+
+                if (numbers.Length != 4)
                 {
                     return false;
                 }
 
-                foreach(string number in numbers)
+                foreach (string number in numbers)
                 {
-                    if(number == "x"){continue;}
+                    if (number == "x") { continue; }
 
                     short current = Convert.ToInt16(number);
-                    if(current > 255 || current < 0)
+                    if (current > 255 || current < 0)
                     {
                         return false;
                     }
                 }
-            }catch(Exception e)
+            }
+            catch (Exception)
             {
                 return false;
             }
@@ -42,15 +46,15 @@ namespace Project{
 
         public static void PingIP(string ip)
         {
-            Ping ping = new();
-            PingOptions options = new();
+            Ping ping = new Ping();
+            PingOptions options = new PingOptions();
             string data = "Hello World!";
             byte[] buffer = Encoding.ASCII.GetBytes(data);
             int timeout = 1000;
 
             PingReply reply = ping.Send(ip, timeout, buffer, options);
 
-            if(reply.Status == IPStatus.Success)
+            if (reply.Status == IPStatus.Success)
             {
                 Console.WriteLine(ip + " is up, ms: " + reply.RoundtripTime + ", ttl: " + reply.Options.Ttl.ToString());
             }
@@ -58,20 +62,20 @@ namespace Project{
 
         public static void AutoScan()
         {
-            NetworkInterface [] interfaces = NetworkInterface.GetAllNetworkInterfaces();
-            List<string> ipv4Ips = new();
+            NetworkInterface[] interfaces = NetworkInterface.GetAllNetworkInterfaces();
+            List<string> ipv4Ips = new List<string>();
 
-            foreach(NetworkInterface currentInterface in interfaces)
+            foreach (NetworkInterface currentInterface in interfaces)
             {
-                if(currentInterface.Name == "lo0"){continue;}
+                if (currentInterface.Name == "lo0") { continue; }
 
-                if(!currentInterface.Supports(NetworkInterfaceComponent.IPv4)){continue;}
+                if (!currentInterface.Supports(NetworkInterfaceComponent.IPv4)) { continue; }
                 foreach (UnicastIPAddressInformation addrInfo in currentInterface.GetIPProperties().UnicastAddresses)
                 {
-                    if(addrInfo.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                    if (addrInfo.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
                     {
                         string interfaceIp = addrInfo.Address.ToString();
-                        
+
                         interfaceIp = interfaceIp.Substring(0, interfaceIp.LastIndexOf('.') + 1);
                         interfaceIp += "x";
 
@@ -80,9 +84,9 @@ namespace Project{
                 }
             }
 
-            foreach(string ip in ipv4Ips)
+            foreach (string ip in ipv4Ips)
             {
-                for(int i = 0; i <= 255; i++)
+                for (int i = 0; i <= 255; i++)
                 {
                     Thread thread = new Thread(() => PingIP(ip.Replace("x", i.ToString())));
                     thread.Start();
@@ -93,20 +97,22 @@ namespace Project{
         //modes are true=aggressive, false=passive
         public static void Portscan(string ip, bool mode)
         {
-            for(int i = 0; i <= 65535; i++)
+            for (int i = 0; i <= 65535; i++)
             {
-                if(mode)
+                if (mode)
                 {
                     Thread thread = new Thread((object port) => {
                         try
                         {
                             try
                             {
-                                TcpClient client = new(ip, (int)port);
+                                TcpClient client = new TcpClient(ip, (int)port);
                                 Console.WriteLine("Port " + port + " is open");
-                            } catch(Exception){}
+                            }
+                            catch (Exception) { }
 
-                        } catch (Exception){} 
+                        }
+                        catch (Exception) { }
                     });
                     thread.Start(i);
                 }
@@ -114,9 +120,10 @@ namespace Project{
                 {
                     try
                     {
-                        TcpClient client = new(ip, i);
+                        TcpClient client = new TcpClient(ip, i);
                         Console.WriteLine("Port " + i + " is open");
-                    } catch(Exception){}
+                    }
+                    catch (Exception) { }
                     Thread.Sleep(50);
 
                 }
@@ -125,19 +132,19 @@ namespace Project{
 
         public static void Scan(string ip)
         {
-            if(!IpStringCheck(ip))
+            if (!IpStringCheck(ip))
             {
                 Console.WriteLine("Please enter a valid ip address");
                 return;
             }
 
-            if(!ip.Contains('x'))
+            if (!ip.Contains("x"))
             {
                 PingIP(ip);
                 return;
             }
 
-            for(int i = 0; i <= 255; i++)
+            for (int i = 0; i <= 255; i++)
             {
                 Thread thread = new Thread(() => PingIP(ip.Replace("x", i.ToString())));
                 thread.Start();
@@ -146,7 +153,7 @@ namespace Project{
 
         public static string Help()
         {
-             return @"
+            return @"
             Usage: dotnet run <Ip Range or Command>
             
             Ip example:
@@ -159,45 +166,45 @@ namespace Project{
                 Portscan: scans all ports on a given ip, usage: Portscan <IP> opt<scan mode (options are aggressive [a] or passive [p])>
             ";
         }
-        public static void Main(string [] args)
-        {   
-            if(args.Length < 1)
+        public static void Main(string[] args)
+        {
+            if (args.Length < 1)
             {
                 Console.WriteLine(Help());
                 return;
             }
 
-            if(args[0].ToLower() == "help")
+            if (args[0].ToLower() == "help")
             {
                 Console.WriteLine(Help());
                 return;
             }
-            else if(args[0].ToLower() == "auto")
+            else if (args[0].ToLower() == "auto")
             {
                 AutoScan();
                 return;
             }
-            else if(args[0].ToLower() == "portscan")
+            else if (args[0].ToLower() == "portscan")
             {
-                if(args[1] == null)
+                if (args[1] == null)
                 {
                     Console.WriteLine("Usage: dotnet run Portscan <IP>");
                     return;
                 }
-                if(!IpStringCheck(args[1]))
+                if (!IpStringCheck(args[1]))
                 {
                     Console.WriteLine("Please enter a valid ip");
                     return;
                 }
 
                 bool mode = true;
-                if(args.Length > 2)
+                if (args.Length > 2)
                 {
-                    if(args[2] == "p" || args[2] == "passive")
+                    if (args[2] == "p" || args[2] == "passive")
                     {
                         mode = false;
                     }
-                    else if(args[2] == "a" || args[2] == "aggressive")
+                    else if (args[2] == "a" || args[2] == "aggressive")
                     {
                         mode = true;
                     }
@@ -213,7 +220,7 @@ namespace Project{
             else
             {
                 string ipStr = args[0];
-                if(IpStringCheck(ipStr))
+                if (IpStringCheck(ipStr))
                 {
                     Scan(ipStr);
                 }
